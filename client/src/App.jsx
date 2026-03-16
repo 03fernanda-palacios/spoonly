@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import useMockTransactions, { deriveSpendingContext } from './hooks/useMockTransactions'
+import NegotiationDashboard from './NegotiationDashboard'
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -343,19 +344,27 @@ function StepNeighbors({ onActivate }) {
 
 export default function App() {
   const transactions = useMockTransactions()
-  const [step, setStep]             = useState(1)
-  const [profile, setProfile]       = useState(null)
+  const [step, setStep]               = useState(1)
+  const [profile, setProfile]         = useState(null)
   const [calendarEvents, setCalendar] = useState(null)
-  const [neighbors, setNeighbors]   = useState(null)
+  const [activeNeighbors, setActive]  = useState(null)
 
-  console.log('[spending context]', deriveSpendingContext(transactions))
-
-  function handleProfile(data) { setProfile(data); setStep(2) }
+  function handleProfile(data)    { setProfile(data); setStep(2) }
   function handleCalendar(events) { setCalendar(events); setStep(3) }
   function handleActivate(selected) {
-    setNeighbors(selected)
-    // TODO: advance to negotiation dashboard
-    console.log('[launch negotiation]', { profile, calendarEvents, transactions, neighbors: selected })
+    setActive(selected)
+    setStep(4)
+  }
+
+  if (step === 4) {
+    return (
+      <NegotiationDashboard
+        profile={profile}
+        calendarEvents={calendarEvents}
+        transactions={transactions}
+        neighbors={activeNeighbors}
+      />
+    )
   }
 
   return (

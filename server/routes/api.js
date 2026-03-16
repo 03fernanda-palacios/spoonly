@@ -34,9 +34,12 @@ function deriveScheduleSummary(calendarEvents) {
 // ── Helper 2 ──────────────────────────────────────────────────────────────────
 function deriveSpendingSummary(transactions) {
   const foodKeywords = ['food', 'restaurant', 'dining', 'grocery'];
-  const foodTx = transactions.filter(t =>
-    foodKeywords.some(kw => t?.category?.toLowerCase().includes(kw))
-  );
+  const foodTx = transactions.filter(t => {
+    const cat = Array.isArray(t?.category)
+      ? t.category.join(' ').toLowerCase()
+      : (t?.category ?? '').toLowerCase()
+    return foodKeywords.some(kw => cat.includes(kw))
+  });
 
   if (foodTx.length === 0) return 'No food spending data available.';
 
@@ -154,8 +157,12 @@ async function negotiateWithNeighbor(neighbor, userSystemPrompt, res, dealClosed
     neighborMessages.push({ role: 'user', content: userText });
 
     if (dealFlag) {
-      dealClosedRef.value = true;
-      writeDone('deal');
+      if (!dealClosedRef.value) {
+        dealClosedRef.value = true;
+        writeDone('deal');
+      } else {
+        writeDone('superseded');
+      }
       return;
     }
     if (passFlag) {
@@ -172,8 +179,12 @@ async function negotiateWithNeighbor(neighbor, userSystemPrompt, res, dealClosed
     userMessages.push({ role: 'user', content: neighborText });
 
     if (nDealFlag) {
-      dealClosedRef.value = true;
-      writeDone('deal');
+      if (!dealClosedRef.value) {
+        dealClosedRef.value = true;
+        writeDone('deal');
+      } else {
+        writeDone('superseded');
+      }
       return;
     }
     if (nPassFlag) {
