@@ -1,120 +1,72 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import { useState, useEffect } from 'react'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [calendarEvents, setCalendarEvents] = useState(null)
+
+  useEffect(() => {
+    function handleMessage(event) {
+      if (event.data?.type === 'GOOGLE_CALENDAR_EVENTS') {
+        setCalendarEvents(event.data.events)
+      }
+    }
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
+
+  function connectCalendar() {
+    const width = 500
+    const height = 650
+    const left = window.screenX + (window.outerWidth - width) / 2
+    const top = window.screenY + (window.outerHeight - height) / 2
+    window.open(
+      'http://localhost:3001/auth/google',
+      'Google Calendar Auth',
+      `width=${width},height=${height},left=${left},top=${top}`
+    )
+  }
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
+    <div style={{ fontFamily: 'Inter, sans-serif', padding: '2rem', maxWidth: 600, margin: '0 auto' }}>
+      <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Spoonly</h1>
+
+      {calendarEvents === null ? (
         <button
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
+          onClick={connectCalendar}
+          style={{
+            background: '#6366f1',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            padding: '0.75rem 1.5rem',
+            fontSize: '1rem',
+            cursor: 'pointer'
+          }}
         >
-          Count is {count}
+          Connect Google Calendar
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
+      ) : (
+        <div>
+          <p style={{ color: '#6366f1', fontWeight: 600, marginBottom: '1rem' }}>
+            Calendar connected — {calendarEvents.length} event(s) tomorrow
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0 }}>
+            {calendarEvents.length === 0 && (
+              <li style={{ color: '#888' }}>No events tomorrow — free day!</li>
+            )}
+            {calendarEvents.map((e, i) => (
+              <li key={i} style={{ marginBottom: '0.5rem', background: '#f3f4f6', borderRadius: 6, padding: '0.5rem 0.75rem' }}>
+                <strong>{e.summary}</strong>{' '}
+                <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>
+                  {e.start?.dateTime
+                    ? `${new Date(e.start.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – ${new Date(e.end.dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                    : 'All day'}
+                </span>
+              </li>
+            ))}
           </ul>
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      )}
+    </div>
   )
 }
 
